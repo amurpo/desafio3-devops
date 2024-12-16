@@ -41,10 +41,21 @@ jobs:
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      - name: Update ECS Service using AWS CLI
+      - name: Install ecs-deploy
         run: |
-          aws ecs update-service \
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install ecs-deploy
+        
+      - name: Verify ecs-deploy installation
+        run: |
+          echo "Verifying ecs-deploy installation..."
+          pip3 show ecs-deploy
+          which ecs-deploy || echo "ecs-deploy not found"
+        
+      - name: Deploy to ECS
+        run: |
+          ecs-deploy \
             --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_SERVICE_NAME }} \
-            --force-new-deployment \
+            --service-name ${{ secrets.ECS_SERVICE_NAME }} \
             --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
