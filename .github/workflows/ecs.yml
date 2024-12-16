@@ -3,23 +3,24 @@ on:
   push:
     branches:
       - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Cache Docker layers
         uses: actions/cache@v4
         with:
@@ -27,39 +28,31 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-      
+
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-      
+
       - name: Build Docker image
         run: |
           docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
-      
+
       - name: Push Docker image to ECR
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
-      
+
       - name: Install and setup ecs-deploy
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install ecs-deploy
-          
-          # Create a wrapper script
-          echo '#!/bin/bash
-          python3 -m ecs_deploy "$@"' > /usr/local/bin/ecs-deploy
-          
-          # Make the wrapper script executable
-          chmod +x /usr/local/bin/ecs-deploy
-          
+
           # Verify installation
-          which ecs-deploy
-          ecs-deploy --version
-      
+          python3 -m ecs_deploy --version
+
       - name: Deploy to ECS
         run: |
-          ecs-deploy \
+          python3 -m ecs_deploy \
             --cluster ${{ secrets.ECS_CLUSTER }} \
             --service-name ${{ secrets.ECS_SERVICE_NAME }} \
             --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
