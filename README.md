@@ -1,4 +1,4 @@
-[![Deploy to ECS](https://github.com/amurpo/desafio2-devops/actions/workflows/ecs.yml/badge.svg)](https://github.com/amurpo/desafio3-devops/actions/workflows/ecs.yml)
+[![Deploy to Amazon ECS](https://github.com/amurpo/desafio3-devops/actions/workflows/ecs.yml/badge.svg)](https://github.com/amurpo/desafio3-devops/actions/workflows/ecs.yml)
 
 # Desafío 3 - DevOps
 
