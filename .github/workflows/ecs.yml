@@ -45,21 +45,34 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install ecs-deploy
-      
-      - name: Verify and set up ecs-deploy
-        run: |
-          # Find the ecs-deploy executable path
-          ECS_DEPLOY_PATH=$(python3 -m site --user-base)/bin/ecs-deploy
           
-          # Verify the path exists
-          if [ ! -f "$ECS_DEPLOY_PATH" ]; then
-            echo "ecs-deploy not found at expected location"
+          # Diagnostic information
+          echo "Python version:"
+          python3 --version
+          
+          echo "Pip version:"
+          pip3 --version
+          
+          echo "Python site-packages:"
+          python3 -m site --user-site
+          
+          echo "Listing possible ecs-deploy locations:"
+          find ~/.local -name ecs-deploy
+          which ecs-deploy || echo "ecs-deploy not in PATH"
+      
+      - name: Set up ecs-deploy PATH
+        run: |
+          ECS_DEPLOY_PATH=$(find ~/.local -name ecs-deploy | head -n 1)
+          
+          if [ -z "$ECS_DEPLOY_PATH" ]; then
+            echo "Could not find ecs-deploy executable"
+            pip3 show ecs-deploy
             exit 1
           fi
           
-          # Add to PATH
-          echo "$ECS_DEPLOY_PATH"
-          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
+          echo "Found ecs-deploy at: $ECS_DEPLOY_PATH"
+          chmod +x "$ECS_DEPLOY_PATH"
+          echo "$(dirname "$ECS_DEPLOY_PATH")" >> $GITHUB_PATH
       
       - name: Deploy to ECS
         run: |
