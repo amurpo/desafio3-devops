@@ -41,10 +41,19 @@ jobs:
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
+      - name: Register new ECS task definition
+        id: register-task
+        run: |
+          NEW_TASK_DEF=$(aws ecs register-task-definition \
+            --family ${{ secrets.ECS_FAMILY }} \
+            --container-definitions "[{\"image\":\"${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}\",\"memory\":512,\"cpu\":256}]" \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "::set-output name=task_definition_arn::$NEW_TASK_DEF"
+
       - name: Update ECS service
         run: |
           aws ecs update-service \
             --cluster ${{ secrets.ECS_CLUSTER }} \
             --service ${{ secrets.ECS_SERVICE_NAME }} \
-            --force-new-deployment \
-            --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+            --task-definition ${{ steps.register-task.outputs.task_definition_arn }} \
+            --force-new-deployment
