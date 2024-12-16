@@ -22,13 +22,13 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Cache Docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-
+      
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -43,7 +43,13 @@ jobs:
 
       - name: Install ecs-deploy
         run: |
-          sudo pip install ecs-deploy
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install ecs-deploy
+
+      - name: Check ecs-deploy installation
+        run: |
+          which ecs-deploy
 
       - name: Deploy to ECS
         run: |
