@@ -41,19 +41,30 @@ jobs:
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      - name: Register new ECS task definition
-        id: register-task
+      - name: Install and setup ecs-deploy
         run: |
-          NEW_TASK_DEF=$(aws ecs register-task-definition \
-            --family ${{ secrets.ECS_FAMILY }} \
-            --container-definitions "[{\"image\":\"${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}\",\"memory\":512,\"cpu\":256}]" \
-            --query 'taskDefinition.taskDefinitionArn' --output text)
-          echo "::set-output name=task_definition_arn::$NEW_TASK_DEF"
+          # Install Python and ecs-deploy
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install ecs-deploy
+          
+          # Create a wrapper script for ecs-deploy
+          echo '#!/bin/bash
+          python3 -m ecs_deploy "$@"' > /usr/local/bin/ecs-deploy
+          
+          # Make the script executable
+          chmod +x /usr/local/bin/ecs-deploy
+          
+          # Verify installation
+          which ecs-deploy
+          ecs-deploy --version
 
-      - name: Update ECS service
+      - name: Deploy to ECS
         run: |
-          aws ecs update-service \
+          # Run ecs-deploy to update ECS service
+          ecs-deploy \
             --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_SERVICE_NAME }} \
-            --task-definition ${{ steps.register-task.outputs.task_definition_arn }} \
+            --service-name ${{ secrets.ECS_SERVICE_NAME }} \
+            --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} \
+            --region ${{ vars.AWS_REGION }} \
             --force-new-deployment
