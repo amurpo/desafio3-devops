@@ -26,7 +26,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-latest
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 
@@ -36,21 +36,17 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.ECR_REPOSITORY }}:latest .
+          docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
 
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+          docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      - name: Install ecs-deploy script
+      - name: Update ECS service with new image
         run: |
-          curl https://raw.githubusercontent.com/silinternational/ecs-deploy/master/ecs-deploy | sudo tee /usr/bin/ecs-deploy
-          sudo chmod +x /usr/bin/ecs-deploy
-
-      - name: Deploy to ECS using ecs-deploy
-        run: |
-          ecs-deploy \
+          aws ecs update-service \
             --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service-name ${{ secrets.ECS_SERVICE_NAME }} \
-            --image ${{ secrets.ECR_REPOSITORY }}:latest \
-            --force-new-deployment
+            --service ${{ secrets.ECS_SERVICE_NAME }} \
+            --force-new-deployment \
+            --task-definition ${{ secrets.ECS_TASK_DEFINITION_ARN }} \
+            --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
