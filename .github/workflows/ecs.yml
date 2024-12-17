@@ -42,24 +42,20 @@ jobs:
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      - name: Register new ECS Task Definition
+      - name: Install ecs-deploy script
         run: |
-          aws ecs register-task-definition \
-            --family tarea-cursodevops \
-            --container-definitions '[
-              {
-                "name": "my-container",
-                "image": "${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}",
-                "memory": 512,
-                "cpu": 256,
-                "essential": true
-              }
-            ]'
+          curl https://raw.githubusercontent.com/silinternational/ecs-deploy/master/ecs-deploy | sudo tee /usr/bin/ecs-deploy
+          sudo chmod +x /usr/bin/ecs-deploy
 
-      - name: Update ECS service with new Task Definition
+      - name: Create task definition from secret
         run: |
-          aws ecs update-service \
+          echo "${{ secrets.AWS_TASK_DEFINITION_JSON }}" > task-definition.json
+          aws ecs register-task-definition --cli-input-json file://task-definition.json
+
+      - name: Deploy to ECS using ecs-deploy
+        run: |
+          ecs-deploy \
             --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_SERVICE_NAME }} \
-            --task-definition ${{ secrets.ECS_TASK_DEFINITION_ARN }} \
+            --service-name ${{ secrets.ECS_SERVICE_NAME }} \
+            --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} \
             --force-new-deployment
