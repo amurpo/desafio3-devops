@@ -47,10 +47,14 @@ jobs:
           curl -L https://github.com/kayac/ecspresso/releases/download/v2.4.5/ecspresso_2.4.5_linux_amd64.tar.gz | tar xz
           sudo mv ecspresso /usr/local/bin/
 
+      - name: Initialize ecspresso configuration
+        run: |
+          mkdir -p ~/.ecspresso
+          echo "cluster_name: ${{ secrets.ECS_CLUSTER }}" > ~/.ecspresso/config.yaml
+          echo "service_name: ${{ secrets.ECS_SERVICE_NAME }}" >> ~/.ecspresso/config.yaml
+          echo "region: ${{ secrets.AWS_REGION }}" >> ~/.ecspresso/config.yaml
+          echo "image: ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}" >> ~/.ecspresso/config.yaml
+
       - name: Deploy to ECS using ecspresso
         run: |
-          ecspresso deploy \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service-name ${{ secrets.ECS_SERVICE_NAME }} \
-            --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} \
-            --force-new-deployment
+          ecspresso deploy --force-new-deployment
