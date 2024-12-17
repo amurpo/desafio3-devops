@@ -54,3 +54,4 @@ jobs:
             --service-name ${{ secrets.ECS_SERVICE_NAME }} \
             --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} \
             --force-new-deployment
+            --debug
