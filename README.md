@@ -17,6 +17,7 @@ Configurar los secretos necesarios para GitHub Actions:
    - **ECR_REPOSITORY**: El nombre del repositorio ECR.
    - **ECS_CLUSTER**: El nombre del clúster ECS.
    - **ECS_SERVICE_NAME**: El nombre del servicio ECS.
+   - **ECS_TASK_DEFINITION_ARN**: El arn de la tarea.
 
    Estos valores se pueden configurar en la sección de **Settings > Secrets and variables > Actions** del repositorio en GitHub.
 
