@@ -2,7 +2,7 @@
 
 # Desafío 3 - DevOps
 
-Este es un proyecto que implementa un servidor web utilizando **Node.js** y **Express**. El código está desplegado en una instancia de **ECS** en AWS.
+Este es un proyecto que implementa un servidor web utilizando **Node.js** y **Express**. El código será desplegado en una instancia de **ECS** en AWS.
 
 ## Requisitos
 
