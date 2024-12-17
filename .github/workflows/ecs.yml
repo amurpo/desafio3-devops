@@ -29,7 +29,7 @@ jobs:
           key: ${{ runner.os }}-buildx-latest
           restore-keys: |
             ${{ runner.os }}-buildx-
-            
+
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -37,16 +37,15 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
-          
+
       - name: Push Docker image to ECR
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
-          
+
       - name: Install and use ecspresso for ECS deploy
         run: |
           curl -L https://github.com/kayac/ecspresso/releases/download/v2.4.5/ecspresso_2.4.5_linux_amd64.tar.gz | tar xz
           sudo mv ecspresso /usr/local/bin/
           ecspresso deploy \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_SERVICE_NAME }} \
+            --config ${{ secrets.ECSPRESSO_CONFIG_FILE }} \
             --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
