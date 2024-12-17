@@ -78,4 +78,5 @@ jobs:
          --cluster ${{ secrets.ECS_CLUSTER }} \
          --service-name ${{ secrets.ECS_SERVICE_NAME }} \
          --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} \
+         --task-definition ${{ secrets.AWS_TASK_DEFINITION_NAME }}:$LATEST_TASK_REVISION \
          --force-new-deployment
