@@ -41,30 +41,16 @@ jobs:
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      - name: Install and setup ecs-deploy
+      - name: Deploy to ECS using ecs-deploy Docker container
         run: |
-          # Install Python and ecs-deploy
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install ecs-deploy
-          
-          # Create a wrapper script for ecs-deploy
-          echo '#!/bin/bash
-          python3 -m ecs_deploy "$@"' > /usr/local/bin/ecs-deploy
-          
-          # Make the script executable
-          chmod +x /usr/local/bin/ecs-deploy
-          
-          # Verify installation
-          which ecs-deploy
-          ecs-deploy --version
-
-      - name: Deploy to ECS
-        run: |
-          # Run ecs-deploy to update ECS service
-          ecs-deploy \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service-name ${{ secrets.ECS_SERVICE_NAME }} \
-            --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} \
-            --region ${{ vars.AWS_REGION }} \
-            --force-new-deployment
+          docker run --rm \
+            -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            -e AWS_REGION=${{ vars.AWS_REGION }} \
+            -e ECS_CLUSTER=${{ secrets.ECS_CLUSTER }} \
+            -e ECS_SERVICE_NAME=${{ secrets.ECS_SERVICE_NAME }} \
+            -e ECR_REPOSITORY=${{ secrets.ECR_REPOSITORY }} \
+            -e GITHUB_SHA=${{ github.sha }} \
+            --entrypoint /bin/bash \
+            ghcr.io/marcelovicentegc/ecs-deploy:latest \
+            -c "ecs-deploy --cluster $ECS_CLUSTER --service-name $ECS_SERVICE_NAME --image $ECR_REPOSITORY:$GITHUB_SHA --region $AWS_REGION --force-new-deployment"
