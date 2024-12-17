@@ -42,15 +42,28 @@ jobs:
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      - name: Install ecs-deploy script
+      - name: Install dependencies
         run: |
+          # Install jq for JSON processing
+          sudo apt-get update && sudo apt-get install -y jq
+          # Install ecs-deploy script
           curl https://raw.githubusercontent.com/silinternational/ecs-deploy/master/ecs-deploy | sudo tee /usr/bin/ecs-deploy
           sudo chmod +x /usr/bin/ecs-deploy
 
-      - name: Create task definition from secret
+      - name: Update ECS task definition
         run: |
-          echo "${{ secrets.AWS_TASK_DEFINITION_JSON }}" > task-definition.json
-          aws ecs register-task-definition --cli-input-json file://task-definition.json
+          # Retrieve current task definition
+          aws ecs describe-task-definition \
+            --task-definition ${{ secrets.AWS_TASK_DEFINITION_NAME }} \
+            --query "taskDefinition" \
+            --output json > current-task-definition.json
+
+          # Update the container image in the task definition
+          NEW_IMAGE="${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}"
+          jq --arg IMAGE "$NEW_IMAGE" '.containerDefinitions[0].image = $IMAGE' current-task-definition.json > updated-task-definition.json
+
+          # Register the updated task definition
+          aws ecs register-task-definition --cli-input-json file://updated-task-definition.json
 
       - name: Deploy to ECS using ecs-deploy
         run: |
