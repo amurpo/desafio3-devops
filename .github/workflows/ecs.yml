@@ -45,7 +45,7 @@ jobs:
       - name: Register new ECS Task Definition
         run: |
           aws ecs register-task-definition \
-            --family ${{ secrets.ECS_TASK_DEFINITION_FAMILY }} \
+            --family tarea-cursodevops \
             --container-definitions '[
               {
                 "name": "my-container",
