@@ -50,10 +50,10 @@ jobs:
       - name: Initialize ecspresso configuration
         run: |
           mkdir -p ~/.ecspresso
-          echo "cluster_name: ${{ secrets.ECS_CLUSTER }}" > ~/.ecspresso/config.yaml
-          echo "service_name: ${{ secrets.ECS_SERVICE_NAME }}" >> ~/.ecspresso/config.yaml
-          echo "region: ${{ secrets.AWS_REGION }}" >> ~/.ecspresso/config.yaml
-          echo "image: ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}" >> ~/.ecspresso/config.yaml
+          echo "cluster_name: ${{ secrets.ECS_CLUSTER }}" > ~/.ecspresso/ecspresso.yml
+          echo "service_name: ${{ secrets.ECS_SERVICE_NAME }}" >> ~/.ecspresso/ecspresso.yml
+          echo "region: ${{ secrets.AWS_REGION }}" >> ~/.ecspresso/ecspresso.yml
+          echo "image: ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}" >> ~/.ecspresso/ecspresso.yml
 
       - name: Deploy to ECS using ecspresso
         run: |
