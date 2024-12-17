@@ -54,7 +54,7 @@ jobs:
        run: |
          # Retrieve current task definition
          aws ecs describe-task-definition \
-           --task-definition ${{ secrets.AWS_TASK_DEFINITION_NAME }} \
+           --task-definition ${{ secrets.AWS_TASK_DEFINITION_NAME }}:1 \
            | jq '.taskDefinition | del(
              .taskDefinitionArn, 
              .revision, 
