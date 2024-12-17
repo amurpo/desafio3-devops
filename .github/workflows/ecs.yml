@@ -17,7 +17,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -42,10 +42,15 @@ jobs:
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      - name: Install and use ecspresso for ECS deploy
+      - name: Install ecspresso
         run: |
           curl -L https://github.com/kayac/ecspresso/releases/download/v2.4.5/ecspresso_2.4.5_linux_amd64.tar.gz | tar xz
           sudo mv ecspresso /usr/local/bin/
+
+      - name: Deploy to ECS using ecspresso
+        run: |
           ecspresso deploy \
-            --config ${{ secrets.ECSPRESSO_CONFIG_FILE }} \
-            --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service-name ${{ secrets.ECS_SERVICE_NAME }} \
+            --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} \
+            --force-new-deployment
