@@ -34,14 +34,14 @@ El proyecto incluye un flujo de trabajo en `.github/workflows/ecs.yml` que:
    El flujo de trabajo usa `aws-actions/amazon-ecr-login` para autenticar en ECR.
 
 2. **Construcción de la imagen:**
-   La imagen se construye y etiqueta usando el hash del commit de GitHub:
+   La imagen se construye y etiqueta usando un tag latest:
    ```bash
-   docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
+   docker build -t ${{ secrets.ECR_REPOSITORY }}:latest .
    ```
 
 3. **Push a ECR:**
    ```bash
-   docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+   docker push ${{ secrets.ECR_REPOSITORY }}:latest
    ```
 
 4. **Despliegue en ECS:**
@@ -50,7 +50,7 @@ El proyecto incluye un flujo de trabajo en `.github/workflows/ecs.yml` que:
    ecs-deploy \
      --cluster ${{ secrets.ECS_CLUSTER }} \
      --service-name ${{ secrets.ECS_SERVICE_NAME }} \
-     --image ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+     --image ${{ secrets.ECR_REPOSITORY }}:latest
    ```
 
 ## Acceso al servidor
