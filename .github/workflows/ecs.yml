@@ -29,32 +29,24 @@ jobs:
           key: ${{ runner.os }}-buildx-latest
           restore-keys: |
             ${{ runner.os }}-buildx-
-
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
-
+          docker build -t ${{ secrets.ECR_REPOSITORY }}:latest .
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
-
-      - name: Install ecspresso
+          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+      - name: Install ecs-deploy script
         run: |
-          curl -L https://github.com/kayac/ecspresso/releases/download/v2.4.5/ecspresso_2.4.5_linux_amd64.tar.gz | tar xz
-          sudo mv ecspresso /usr/local/bin/
-
-      - name: Initialize ecspresso configuration
+          curl https://raw.githubusercontent.com/silinternational/ecs-deploy/master/ecs-deploy | sudo tee /usr/bin/ecs-deploy
+          sudo chmod +x /usr/bin/ecs-deploy
+      - name: Deploy to ECS using ecs-deploy
         run: |
-          mkdir -p ~/.ecspresso
-          echo "cluster_name: ${{ secrets.ECS_CLUSTER }}" > ~/.ecspresso/ecspresso.yml
-          echo "service_name: ${{ secrets.ECS_SERVICE_NAME }}" >> ~/.ecspresso/ecspresso.yml
-          echo "region: ${{ secrets.AWS_REGION }}" >> ~/.ecspresso/ecspresso.yml
-          echo "image: ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}" >> ~/.ecspresso/ecspresso.yml
-
-      - name: Deploy to ECS using ecspresso
-        run: |
-          ecspresso deploy --force-new-deployment
+          ecs-deploy \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service-name ${{ secrets.ECS_SERVICE_NAME }} \
+            --image ${{ secrets.ECR_REPOSITORY }}:latest \
+            --force-new-deployment
